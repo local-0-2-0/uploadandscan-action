@@ -3,7 +3,7 @@ const { calculateAuthorizationHeader } = require('./veracode-hmac.js');
 const { getHostAndCredentials } = require('../utils.js')
 const core = require('@actions/core');
 
-async function getResourceByAttribute (vid, vkey, resource) {
+async function getResourceByAttribute (vid, vkey, resource,debug) {
   const resourceUri = resource.resourceUri;
   const queryAttribute = resource.queryAttribute;
   const queryValue = resource.queryValue;
@@ -21,6 +21,17 @@ async function getResourceByAttribute (vid, vkey, resource) {
   };
 
   const appUrl = `https://${host}${resourceUri}${urlQueryParams}`;
+
+  if (debug && debug==1) {
+    core.info('---- DEBUG OUTPUT START ----')
+    core.info('---- getResourceByAttribute - request settings ----')
+    core.info('---- req url: ' + appUrl)
+    core.info('---- http_proxy: ' + (process.env.HTTP_PROXY || process.env.http_proxy))
+    core.info('---- https_proxy: ' + (process.env.HTTPS_PROXY || process.env.https_proxy))
+    core.info('---- headers: ' + JSON.stringify(headers))
+    core.info('---- DEBUG OUTPUT END ----')  
+  }
+
   try {
     if ( process.env.HTTP_PROXY !="" || process.env.HTTPS_PROXY !="" || process.env.http_proxy !="" || process.env.https_proxy !=""){
       const response = await fetch(appUrl,{ headers });
@@ -35,13 +46,24 @@ async function getResourceByAttribute (vid, vkey, resource) {
   }
 }
 
-async function getResource (vid, vkey, resource) {
+async function getResource (vid, vkey, resource,debug) {
   const resourceUri = resource.resourceUri;
   const { host, vid: updatedVid, vkey: updatedVkey } = getHostAndCredentials(vid, vkey);
   const headers = {
     'Authorization': calculateAuthorizationHeader(updatedVid, updatedVkey, host, resourceUri, '', 'GET')
   };
   const appUrl = `https://${host}${resourceUri}`;
+
+  if (debug && debug==1) {
+    core.info('---- DEBUG OUTPUT START ----')
+    core.info('---- getResourceByAttribute - request settings ----')
+    core.info('---- req url: ' + appUrl)
+    core.info('---- http_proxy: ' + (process.env.HTTP_PROXY || process.env.http_proxy))
+    core.info('---- https_proxy: ' + (process.env.HTTPS_PROXY || process.env.https_proxy))
+    core.info('---- headers: ' + JSON.stringify(headers))
+    core.info('---- DEBUG OUTPUT END ----')  
+  }
+
   try {
     if ( process.env.HTTP_PROXY !="" || process.env.HTTPS_PROXY !="" || process.env.http_proxy !="" || process.env.https_proxy !=""){
       const response = await fetch(appUrl,{ headers });

@@ -51,6 +51,9 @@ inputs:
     description: 'Sandbox Name'
     required: false
     default: ''
+  debug:
+    description: 'Enable debug mode. 1 for on'
+    required: false
 
 runs:
   using: 'node20'

@@ -11,7 +11,7 @@ const { getVeracodeTeamsByName } = require('./teams-service.js');
 const { runCommand } = require('../api/java-wrapper.js');
 const xml2js = require('xml2js');
 
-async function getApplicationByName(vid, vkey, applicationName) {
+async function getApplicationByName(vid, vkey, applicationName,debug) {
   core.debug(`Module: application-service, function: getApplicationByName. Application: ${applicationName}`);
   const resource = {
     resourceUri: appConfig().applicationUri,
@@ -19,7 +19,7 @@ async function getApplicationByName(vid, vkey, applicationName) {
     queryValue: encodeURIComponent(applicationName)
   };
   core.debug(resource);
-  const response = await getResourceByAttribute(vid, vkey, resource);
+  const response = await getResourceByAttribute(vid, vkey, resource,debug);
   return response;
 }
 
@@ -68,9 +68,9 @@ function profileExists(responseData, applicationName) {
   }
 }
 
-async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, policyName, teams, createprofile) {
+async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, policyName, teams, createprofile,debug) {
   core.debug(`Module: application-service, function: getVeracodeApplicationForPolicyScan. Application: ${applicationName}`);
-  const responseData = await getApplicationByName(vid, vkey, applicationName);
+  const responseData = await getApplicationByName(vid, vkey, applicationName,debug);
   core.debug(`Check if ${applicationName} is found via Application API`);
   core.debug(responseData);
   const profile = profileExists(responseData, applicationName);
