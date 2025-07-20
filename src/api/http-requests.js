@@ -30,7 +30,6 @@ function setGlobalProxy(debug) {
       core.info('---- https_proxy: ' + (process.env.HTTPS_PROXY || process.env.https_proxy))
       core.info('---- proxy user: ' + proxyUser)
       core.info('---- proxy pass provided: ' + (proxyPass && proxyPass.length>0))      
-      core.info('---- headers: ' + JSON.stringify(headers))
       core.info('---- DEBUG OUTPUT END ----')  
     }
     const proxyAgent = new ProxyAgent(proxyAttr);
@@ -101,7 +100,7 @@ async function getResource (vid, vkey, resource,debug) {
 
   if (debug && debug==1) {
     core.info('---- DEBUG OUTPUT START ----')
-    core.info('---- getResourceByAttribute - request settings ----')
+    core.info('---- getResource - request settings ----')
     core.info('---- req url: ' + appUrl)
     core.info('---- http_proxy: ' + (process.env.HTTP_PROXY || process.env.http_proxy))
     core.info('---- https_proxy: ' + (process.env.HTTPS_PROXY || process.env.https_proxy))
