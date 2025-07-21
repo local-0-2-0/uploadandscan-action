@@ -1,4 +1,4 @@
-//const axios = require('axios');
+
 const { calculateAuthorizationHeader } = require('./veracode-hmac.js');
 const { getHostAndCredentials } = require('../utils.js')
 const core = require('@actions/core');
@@ -95,11 +95,6 @@ async function getResourceByAttribute (vid, vkey, resource,debug) {
       }
 
       return data;
-    // }
-    // else {
-    //   const response = await axios.get(appUrl, { headers });
-    //   return response.data; // Access the response data
-    // }
   } catch (error) {
     core.info('--- Cought error in getResourceByAttribute ---');
     console.error(error);
@@ -125,14 +120,10 @@ async function getResource (vid, vkey, resource,debug) {
   }
 
   try {
-    //if ( process.env.HTTP_PROXY !="" || process.env.HTTPS_PROXY !="" || process.env.http_proxy !="" || process.env.https_proxy !=""){
+
       const response = await fetch(appUrl,{ headers });
       return data = await response.json();
-    // }
-    // else {
-    //   const response = await axios.get(appUrl, { headers });
-    //   return response.data; // Access the response data
-    // }
+
   } catch (error) {
     console.error(error);
   }
@@ -156,11 +147,7 @@ async function createResource(vid, vkey, resource) {
         body: JSON.stringify(resourceData)
         });
       return data = await response.json();
-    // }
-    // else {
-    //   const response = await axios.post(appUrl, resourceData, { headers });
-    //   return response.data; // Access the response data
-    // }
+
   } catch (error) {
     console.error(error);
   }
