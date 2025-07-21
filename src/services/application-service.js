@@ -48,6 +48,12 @@ async function createSandboxRequest(vid, vkey, appguid, sandboxname) {
 
 function profileExists(responseData, applicationName) {
   core.debug(`Module: application-service, function: profileExists. Application: ${applicationName}`);
+  if (responseData == null || responseData.page == null ) {
+    core.warn("Invalid response data");
+    core.info(responseData);
+    return { exists: false, veracodeApp: null };
+  }
+
   if (responseData.page.total_elements === 0) {
     core.debug(`No Veracode application profile found for ${applicationName}`);
     return { exists: false, veracodeApp: null };
@@ -73,6 +79,10 @@ async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, p
   const responseData = await getApplicationByName(vid, vkey, applicationName,debug);
   core.debug(`Check if ${applicationName} is found via Application API`);
   core.debug(responseData);
+  if (debug && debug==1) {
+    core.info(`---- getVeracodeApplicationForPolicyScan(): Check if ${applicationName} is found via Application API`);
+    core.info(`---- Response: ${responseData}`);
+  }
   const profile = profileExists(responseData, applicationName);
   core.debug(`Check if ${applicationName} has a Veracode application profile`);
   // core.debug(profile);

@@ -79,13 +79,29 @@ async function getResourceByAttribute (vid, vkey, resource,debug) {
 
     //if ( process.env.HTTP_PROXY !="" || process.env.HTTPS_PROXY !="" || process.env.http_proxy !="" || process.env.https_proxy !=""){
       const response = await fetch(appUrl,{ headers });
-      return data = await response.json();
+      const data = await response.json();
+
+      if (debug && debug==1) {
+          core.info('---- DEBUG OUTPUT START ----')
+          core.info('---- getResourceByAttribute - post resource response ----')
+          core.info('---- Response Status: ' + response.status)
+          core.info('---- Response Status Text: ' + response.statusText)
+          core.info('---- Response URL: ' + response.url)
+          core.info('---- Response OK: ' + response.ok)
+          core.info('---- Response Type: ' + response.type)
+          core.info('---- data:')
+          core.info(data);
+          core.info('---- DEBUG OUTPUT END ----')
+      }
+
+      return data;
     // }
     // else {
     //   const response = await axios.get(appUrl, { headers });
     //   return response.data; // Access the response data
     // }
   } catch (error) {
+    core.info('--- Cought error in getResourceByAttribute ---');
     console.error(error);
   }
 }
