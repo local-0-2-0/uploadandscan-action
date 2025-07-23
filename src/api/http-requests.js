@@ -125,12 +125,15 @@ async function getResourceByAttribute (vid, vkey, resource,isDebug) {
 
   // Get Proxy
   let proxy = getProxy(isDebug);
+  core.info(proxy);
   try {
-    // Make the request
-    const response = await fetch(appUrl,{ 
+    const fetchOptions = { 
       headers,
       ...(proxy && {dispatcher:proxy})
-    });
+    };
+    core.info(fetchOptions);
+    // Make the request
+    const response = await fetch(appUrl,fetchOptions);
     const data = await response.json();
 
     if (isDebug) {
