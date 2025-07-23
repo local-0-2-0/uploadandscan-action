@@ -57,10 +57,11 @@ async function run() {
     return;
 
   // set global proxy for API calls if proxy attributes are found
-  setGlobalProxy(debug);
+  const isDebug = (debug && debug==1);
+  //setGlobalProxy(isDebug);
 
   core.debug(`Getting Veracode Application for Policy Scan: ${appname}`)
-  const veracodeApp = await getVeracodeApplicationForPolicyScan(vid, vkey, appname, policy, teams, createprofile,debug);
+  const veracodeApp = await getVeracodeApplicationForPolicyScan(vid, vkey, appname, policy, teams, createprofile,isDebug);
   if (veracodeApp.appId === -1) {
     core.setFailed(`Veracode application profile Not Found. Please create a profile on Veracode Platform, \
       or set "createprofile" to "true" in the pipeline configuration to automatically create profile.`);
@@ -78,7 +79,7 @@ async function run() {
   try {
     if (sandboxname !== ''){
       core.info(`Running a Sandbox Scan: '${sandboxname}' on applicaiton: '${appname}'`);
-      const sandboxes = await getVeracodeSandboxIDFromProfile(vid, vkey, veracodeApp.appGuid);
+      const sandboxes = await getVeracodeSandboxIDFromProfile(vid, vkey, veracodeApp.appGuid,isDebug);
 
       core.info('Finding Sandbox ID & GUID');
       if (sandboxes.page.total_elements !== 0) {
@@ -95,7 +96,7 @@ async function run() {
       if ( sandboxID == undefined && createsandbox == 'true'){
         core.debug(`Sandbox Not Found. Creating Sandbox: ${sandboxname}`);
         //create sandbox
-        const createSandboxResponse = await createSandboxRequest(vid, vkey, veracodeApp.appGuid, sandboxname);
+        const createSandboxResponse = await createSandboxRequest(vid, vkey, veracodeApp.appGuid, sandboxname,isDebug);
         core.info(`Veracode Sandbox Created: ${createSandboxResponse.name} / ${createSandboxResponse.guid}`);
         sandboxID = createSandboxResponse.id;
         sandboxGUID = createSandboxResponse.guid;

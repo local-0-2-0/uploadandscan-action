@@ -11,7 +11,7 @@ const { getVeracodeTeamsByName } = require('./teams-service.js');
 const { runCommand } = require('../api/java-wrapper.js');
 const xml2js = require('xml2js');
 
-async function getApplicationByName(vid, vkey, applicationName,debug) {
+async function getApplicationByName(vid, vkey, applicationName,isDebug) {
   core.debug(`Module: application-service, function: getApplicationByName. Application: ${applicationName}`);
   const resource = {
     resourceUri: appConfig().applicationUri,
@@ -19,21 +19,21 @@ async function getApplicationByName(vid, vkey, applicationName,debug) {
     queryValue: encodeURIComponent(applicationName)
   };
   core.debug(resource);
-  const response = await getResourceByAttribute(vid, vkey, resource,debug);
+  const response = await getResourceByAttribute(vid, vkey, resource,isDebug);
   return response;
 }
 
-async function getVeracodeSandboxIDFromProfile(vid, vkey, appguid) {
+async function getVeracodeSandboxIDFromProfile(vid, vkey, appguid,isDebug) {
   core.debug(`Module: application-service, function: getSandboxIDfromProfile. Application: ${appguid}`);
   const resource = {
     resourceUri: appConfig().applicationUri+"/"+appguid+"/sandboxes"
   };
   core.debug(resource);
-  const response = await getResource(vid, vkey, resource);
+  const response = await getResource(vid, vkey, resource,isDebug);
   return response;
 }
 
-async function createSandboxRequest(vid, vkey, appguid, sandboxname) {
+async function createSandboxRequest(vid, vkey, appguid, sandboxname,isDebug) {
   core.debug(`Module: application-service, function: createSandbox. Application: ${appguid}`);
   const resource = {
     resourceUri: appConfig().applicationUri+"/"+appguid+"/sandboxes",
@@ -42,7 +42,7 @@ async function createSandboxRequest(vid, vkey, appguid, sandboxname) {
     }
   };
   core.debug(resource);
-  const response = await createResource(vid, vkey, resource);
+  const response = await createResource(vid, vkey, resource,isDebug);
   return response;
 }
 
@@ -74,12 +74,12 @@ function profileExists(responseData, applicationName) {
   }
 }
 
-async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, policyName, teams, createprofile,debug) {
+async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, policyName, teams, createprofile,isDebug) {
   core.debug(`Module: application-service, function: getVeracodeApplicationForPolicyScan. Application: ${applicationName}`);
-  const responseData = await getApplicationByName(vid, vkey, applicationName,debug);
+  const responseData = await getApplicationByName(vid, vkey, applicationName,isDebug);
   core.debug(`Check if ${applicationName} is found via Application API`);
   core.debug(responseData);
-  if (debug && debug==1) {
+  if (isDebug) {
     core.info(`---- getVeracodeApplicationForPolicyScan(): Check if ${applicationName} is found via Application API`);
     core.info(`---- Response: ${responseData}`);
     try {
@@ -96,9 +96,9 @@ async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, p
     if (createprofile.toLowerCase() !== 'true')
       return { 'appId': -1, 'appGuid': -1, 'oid': -1 };
     
-    const veracodePolicy = await getVeracodePolicyByName(vid, vkey, policyName);
+    const veracodePolicy = await getVeracodePolicyByName(vid, vkey, policyName,isDebug);
     core.debug(`Veracode Policy: ${veracodePolicy}`)
-    const veracodeTeams = await getVeracodeTeamsByName(vid, vkey, teams);
+    const veracodeTeams = await getVeracodeTeamsByName(vid, vkey, teams,isDebug);
     core.debug(`Veracode Teams: ${veracodeTeams}`);
     // create a new Veracode application
     const resource = {
@@ -117,7 +117,7 @@ async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, p
       }
     };
     core.debug(`Create Veracode application profile: ${JSON.stringify(resource)}`);
-    const response = await createResource(vid, vkey, resource);
+    const response = await createResource(vid, vkey, resource,isDebug);
     core.debug(`Veracode application profile created: ${JSON.stringify(response)}`);
     const appProfile = response.app_profile_url;
     return {
