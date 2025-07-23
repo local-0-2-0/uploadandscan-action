@@ -134,15 +134,20 @@ async function getResourceByAttribute (vid, vkey, resource,isDebug) {
     const data = await response.json();
 
     if (isDebug) {
-        core.info('---- DEBUG OUTPUT START ----')
-        core.info('---- getResourceByAttribute - post resource response ----')
-        core.info('---- Response Status: ' + response.status)
-        core.info('---- Response Status Text: ' + response.statusText)
-        core.info('---- Response URL: ' + response.url)
-        core.info('---- Response OK: ' + response.ok)
-        core.info('---- Response Type: ' + response.type)
-        core.info('---- data:')
-        core.info(data);
+        core.info('---- DEBUG OUTPUT START ----');
+        core.info('---- getResourceByAttribute - post resource response ----');
+        core.info('---- Response Status: ' + response.status);
+        core.info('---- Response Status Text: ' + response.statusText);
+        core.info('---- Response URL: ' + response.url);
+        core.info('---- Response OK: ' + response.ok);
+        core.info('---- Response Type: ' + response.type);
+        core.info('---- data:');
+        try {
+          core.info(JSON.stringify(data,null,2));
+        } catch (stringifyError) {
+          core.into('---- Data is not JSON');
+          core.info(data);
+        }
         core.info('---- DEBUG OUTPUT END ----')
     }
 
