@@ -51,6 +51,7 @@ function checkParameters() {
 }
 
 async function run() {
+
   let responseCode = 0;
 
   if (!checkParameters())
@@ -59,6 +60,12 @@ async function run() {
   // set global proxy for API calls if proxy attributes are found
   const isDebug = (debug && debug==1);
   //setGlobalProxy(isDebug);
+  if (isDebug){
+    core.info(`process.env.http_proxy - ${process.env.http_proxy }`);
+    core.info(`process.env.HTTP_PROXY - ${process.env.HTTP_PROXY }`);
+    core.info(`process.env.https_proxy - ${process.env.https_proxy }`);
+    core.info(`process.env.HTTPS_PROXY - ${process.env.HTTPS_PROXY }`);
+  }
 
   core.debug(`Getting Veracode Application for Policy Scan: ${appname}`)
   const veracodeApp = await getVeracodeApplicationForPolicyScan(vid, vkey, appname, policy, teams, createprofile,isDebug);
