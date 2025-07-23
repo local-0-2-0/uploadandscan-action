@@ -50,7 +50,12 @@ function profileExists(responseData, applicationName) {
   core.debug(`Module: application-service, function: profileExists. Application: ${applicationName}`);
   if (responseData == null || responseData.page == null ) {
     core.warning("Invalid response data");
-    core.info(responseData);
+    try {
+      core.info(JSON.stringify(responseData,null,2));
+    } catch (stringifyError) {
+      core.warning("Failed to stringify the response data");
+      core.info(responseData);
+    }
     return { exists: false, veracodeApp: null };
   }
 

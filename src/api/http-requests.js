@@ -141,11 +141,11 @@ async function getResourceByAttribute (vid, vkey, resource,isDebug) {
         core.info('---- Response URL: ' + response.url);
         core.info('---- Response OK: ' + response.ok);
         core.info('---- Response Type: ' + response.type);
-        core.info('---- data:');
+        core.info('---- Response Data:');
         try {
           core.info(JSON.stringify(data,null,2));
         } catch (stringifyError) {
-          core.into('---- Data is not JSON');
+          core.into('---- Response data is not JSON');
           core.info(data);
         }
         core.info('---- DEBUG OUTPUT END ----')
