@@ -13,7 +13,7 @@ function getProxy(isDebug) {
   const proxyPort = process.env.PROXY_PORT;
   const proxyUser = process.env.PROXY_USER;
   const proxyPass = process.env.PROXY_PASS;
-  const proxyProtocol = process.env.PROXY_PROTOCOAL || 'http';
+  const proxyProtocol = process.env.PROXY_PROTOCOL || 'http';
 
   if (httpProxy || httpsProxy || (proxyHost && proxyPort)) {
     let uri = httpsProxy || httpProxy || `${proxyProtocol}://${proxyHost}:${proxyPort}`;
@@ -43,7 +43,7 @@ function getProxy(isDebug) {
     if (isDebug) {
       core.info('---- DEBUG OUTPUT START ----')
       core.info('---- getProxy ----')
-      core.info('---- NO Proxy host or port provided ----')
+      core.info('---- NO Proxy host or port provided -> No proxy will be used for API calls  ----')
       core.info('---- DEBUG OUTPUT END ----')  
     }
   }
@@ -51,7 +51,7 @@ function getProxy(isDebug) {
   return null;
 }
 
-function setGlobalProxy(debug) {
+function setGlobalProxy(isDebug) {
   core.debug('--  setGlobalProxy() - START  --');
   const httpProxy = process.env.http_proxy || process.env.HTTP_PROXY;
   const httpsProxy = process.env.https_proxy || process.env.HTTPS_PROXY;
@@ -68,10 +68,10 @@ function setGlobalProxy(debug) {
     if (proxyUser && proxyPass) {
       proxyAttr['token'] = `Basic ${Buffer.from(`${proxyUser}:${proxyPass}`).toString('base64')}`
     }
-    if (debug && debug==1) {
+    if (isDebug) {
       core.info('---- DEBUG OUTPUT START ----')
       core.info('---- setGlobalProxy ----')
-      core.info('---- proxyAttr: ' + JSON.stringify(proxyAttr))
+      core.info('---- proxyAttr: ' + JSON.stringify(proxyAttr,null,2))
       core.info('---- http_proxy: ' + (process.env.HTTP_PROXY || process.env.http_proxy))
       core.info('---- https_proxy: ' + (process.env.HTTPS_PROXY || process.env.https_proxy))
       core.info('---- proxy user: ' + proxyUser)
@@ -82,10 +82,10 @@ function setGlobalProxy(debug) {
     setGlobalDispatcher(proxyAgent);
     core.debug(`---- Global Proxy Set to: ${uri} ---`);
   } else {
-    if (debug && debug==1) {
+    if (isDebug) {
       core.info('---- DEBUG OUTPUT START ----')
-      core.info('---- getProxy ----')
-      core.info('---- NO Proxy host or port provided ----')
+      core.info('---- setGlobalProxy ----')
+      core.info('---- NO Proxy host or port provided -> No proxy will be used for API calls ----')
       core.info('---- DEBUG OUTPUT END ----')  
     }
   }
@@ -124,13 +124,13 @@ async function getResourceByAttribute (vid, vkey, resource,isDebug) {
   }
 
   // Get Proxy
-  let proxy = getProxy(isDebug);
-  core.info(proxy);
+  //let proxy = getProxy(isDebug);
+  //core.info(proxy);
   try {
-    const fetchOptions = { 
-      headers,
-      ...(proxy && {dispatcher:proxy})
-    };
+    const fetchOptions = { headers };
+    //   headers,
+    //   ...(proxy && {dispatcher:proxy}) // We use global proxy setting
+    // };
     core.info(fetchOptions);
     // Make the request
     const response = await fetch(appUrl,fetchOptions);
@@ -154,19 +154,19 @@ async function getResourceByAttribute (vid, vkey, resource,isDebug) {
         core.info('---- DEBUG OUTPUT END ----')
     }
 
-    if (proxy) {
-      // Close the proxy
-      await proxy.close();
-    }
+    // if (proxy) {
+    //   // Close the proxy
+    //   await proxy.close();
+    // }
 
     return data;
   } catch (error) {
     core.info('--- Cought error in getResourceByAttribute ---');
     console.error(error);
-    if (proxy) {
-      // Close the proxy
-      await proxy.close();
-    }
+    // if (proxy) {
+    //   // Close the proxy
+    //   await proxy.close();
+    // }
   } 
 }
 
@@ -178,7 +178,7 @@ async function getResource (vid, vkey, resource,isDebug) {
   };
   const appUrl = `https://${host}${resourceUri}`;
   // Get Proxy
-  let proxy = getProxy(isDebug);
+  //let proxy = getProxy(isDebug);
 
   if (isDebug) {
     core.info('---- DEBUG OUTPUT START ----')
@@ -192,26 +192,26 @@ async function getResource (vid, vkey, resource,isDebug) {
 
   try {
 
-    const response = await fetch(appUrl,{ 
-      headers,
-      ...(proxy && {dispatcher:proxy})
-    });
+    const response = await fetch(appUrl,{ headers });
+    //   headers,
+    //   ...(proxy && {dispatcher:proxy})
+    // });
 
     const data = await response.json();
 
-    if (proxy) {
-      // Close the proxy
-      await proxy.close();
-    }
+    // if (proxy) {
+    //   // Close the proxy
+    //   await proxy.close();
+    // }
     // return the data
     return data;
 
   } catch (error) {
     console.error(error);
-    if (proxy) {
-      // Close the proxy
-      await proxy.close();
-    }
+    // if (proxy) {
+    //   // Close the proxy
+    //   await proxy.close();
+    // }
   }
 }
 
@@ -225,7 +225,7 @@ async function createResource(vid, vkey, resource,isDebug) {
   };
 
   // Get Proxy
-  let proxy = getProxy(isDebug);
+  //let proxy = getProxy(isDebug);
 
   const appUrl = `https://${host}${resourceUri}`;
   try {
@@ -233,22 +233,22 @@ async function createResource(vid, vkey, resource,isDebug) {
     const response = await fetch(appUrl,{ 
       method: 'POST',
       headers: headers,
-      body: JSON.stringify(resourceData),
-      ...(proxy && {dispatcher:proxy})
+      body: JSON.stringify(resourceData) //,
+//      ...(proxy && {dispatcher:proxy})
       });
 
-    if (proxy) {
-      // Close the proxy
-      await proxy.close();
-    }
+    // if (proxy) {
+    //   // Close the proxy
+    //   await proxy.close();
+    // }
     return data = await response.json();
 
   } catch (error) {
     console.error(error);
-    if (proxy) {
-      // Close the proxy
-      await proxy.close();
-    }
+    // if (proxy) {
+    //   // Close the proxy
+    //   await proxy.close();
+    // }
   }
 }
 
