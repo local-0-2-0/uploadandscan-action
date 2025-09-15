@@ -201,6 +201,8 @@ async function beginPreScan(vid, vkey, jarName, appId, autoScan, sandboxID) {
     '-jar', jarName,
     '-vid', vid,
     '-vkey', vkey,
+    'include_new_modules', true,
+    'scan_all_nonfatal_top_level_modules', true,
     '-action', 'BeginPrescan',
     '-appid', appId,
     '-autoscan', autoScan,
