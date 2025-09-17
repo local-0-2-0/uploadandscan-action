@@ -275,6 +275,7 @@ async function beginScan(vid, vkey, jarName, appId, moduleIds, sandboxID) {
     '-vid', vid,
     '-vkey', vkey,
     '-action', 'BeginScan',
+    'scan_all_top_level_modules', true,
     '-appid', appId,
     '-modules', moduleIds,
   ];
