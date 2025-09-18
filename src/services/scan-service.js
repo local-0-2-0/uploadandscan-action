@@ -276,8 +276,7 @@ async function beginScan(vid, vkey, jarName, appId, moduleIds, sandboxID) {
     '-vkey', vkey,
     '-action', 'BeginScan',
     'scan_all_top_level_modules', true,
-    '-appid', appId,
-    '-modules', moduleIds,
+    '-appid', appId
   ];
   if (sandboxID > 1) {
     commandArguments.push('-sandboxid', sandboxID);
