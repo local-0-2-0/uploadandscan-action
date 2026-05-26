@@ -122,8 +122,10 @@ async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filep
     core.debug(stdout);
     core.debug(stderr);
   }
-
-  if(scantimeout === 0) {
+  core.info('Checking for results...');
+  core.info(scantimeout == 0);
+  core.info(scantimeout == '0');
+  if(scantimeout == 0 || scantimeout == '0'){
     core.info('Static Scan Submitted, please check Veracode Platform for results');
     return;
   }
