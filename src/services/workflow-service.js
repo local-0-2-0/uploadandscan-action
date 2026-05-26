@@ -103,8 +103,8 @@ async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filep
   const debugFlag = debug ? ' -debug' : '';
   if (debug)
     core.debug(`Module: workflow-service, function: executePolicyScan. Application: ${veracodeApp.appId}`);
-  // const policyScanCommand = `java -jar ${jarName} -action UploadAndScanByAppId -vid ${vid} -vkey ${vkey} -appid ${veracodeApp.appId} -filepath ${filepath} -version ${version} -scanpollinginterval 30 -autoscan true -scanallnonfataltoplevelmodules true -includenewmodules true -scantimeout ${scantimeout} -deleteincompletescan 2${debugFlag}`;
-  const policyScanCommand = `java -jar ${jarName} -action UploadAndScan -vid ${vid} -vkey ${vkey} -appname BulkScan-4 -createprofile true -filepath ${filepath} -version ${version} -scantimeout ${scantimeout}`;
+  const policyScanCommand = `java -jar ${jarName} -action UploadAndScanByAppId -vid ${vid} -vkey ${vkey} -appid ${veracodeApp.appId} -filepath ${filepath} -version ${version} -scanpollinginterval 30 -autoscan true -scanallnonfataltoplevelmodules true -includenewmodules true -scantimeout ${scantimeout} -deleteincompletescan 2${debugFlag}`;
+  // const policyScanCommand = `java -jar ${jarName} -action UploadAndScan -vid ${vid} -vkey ${vkey} -appname BulkScan-4 -createprofile true -filepath ${filepath} -version ${version} -scantimeout ${scantimeout}`;
   let scan_id = "";
   let sandboxID;
   let sandboxGUID;
@@ -122,10 +122,8 @@ async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filep
     core.debug(stdout);
     core.debug(stderr);
   }
-  core.info('Checking for results...');
-  core.info(scantimeout == 0);
-  core.info(scantimeout == '0');
-  if(scantimeout == 0 || scantimeout == '0'){
+  core.info('Checking for results.....');
+  if(scantimeout == 0){
     core.info('Static Scan Submitted, please check Veracode Platform for results');
     return;
   }
