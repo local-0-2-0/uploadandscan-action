@@ -23,26 +23,30 @@ async function getApplicationByName(vid, vkey, applicationName,isDebug) {
   return response;
 }
 
-async function getVeracodeSandboxIDFromProfile(vid, vkey, appguid,isDebug) {
-  core.debug(`Module: application-service, function: getSandboxIDfromProfile. Application: ${appguid}`);
+async function getVeracodeSandboxIDFromProfile(vid, vkey, appguid, debug) {
+  if (debug)
+    core.debug(`Module: application-service, function: getSandboxIDfromProfile. Application: ${appguid}`);
   const resource = {
     resourceUri: appConfig().applicationUri+"/"+appguid+"/sandboxes"
   };
-  core.debug(resource);
-  const response = await getResource(vid, vkey, resource,isDebug);
+  const response = await getResource(vid, vkey, resource);
+  if (debug)
+    core.debug(response);
   return response;
 }
 
-async function createSandboxRequest(vid, vkey, appguid, sandboxname,isDebug) {
-  core.debug(`Module: application-service, function: createSandbox. Application: ${appguid}`);
+async function createSandboxRequest(vid, vkey, appguid, sandboxname, debug) {
+  if (debug)
+    core.debug(`Module: application-service, function: createSandbox. Application: ${appguid}`);
   const resource = {
     resourceUri: appConfig().applicationUri+"/"+appguid+"/sandboxes",
     resourceData: {
         name: sandboxname
     }
   };
-  core.debug(resource);
-  const response = await createResource(vid, vkey, resource,isDebug);
+  const response = await createResource(vid, vkey, resource);
+  if (debug)
+    core.debug(response);
   return response;
 }
 
@@ -79,32 +83,27 @@ function profileExists(responseData, applicationName) {
   }
 }
 
-async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, policyName, teams, createprofile,isDebug) {
-  core.debug(`Module: application-service, function: getVeracodeApplicationForPolicyScan. Application: ${applicationName}`);
-  const responseData = await getApplicationByName(vid, vkey, applicationName,isDebug);
-  core.debug(`Check if ${applicationName} is found via Application API`);
-  core.debug(responseData);
-  if (isDebug) {
-    core.info(`---- getVeracodeApplicationForPolicyScan(): Check if ${applicationName} is found via Application API`);
-    core.info(`---- Response: ${responseData}`);
-    try {
-      core.info(JSON.stringify(responseData,null,2));
-    } catch (error) {
-      core.info('responseData is not JSON object');
-      console.error(error);
-    }
+async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, policyName, teams, createprofile, gitRepositoryUrl, debug) {
+  const responseData = await getApplicationByName(vid, vkey, applicationName);
+  if (debug) {
+    core.debug(`Module: application-service, function: getVeracodeApplicationForPolicyScan. Application: ${applicationName}`);
+    core.debug(`Check if ${applicationName} is found via Application API`);
+    core.debug(responseData);
   }
   const profile = profileExists(responseData, applicationName);
-  core.debug(`Check if ${applicationName} has a Veracode application profile`);
+  if (debug)
+    core.debug(`Check if ${applicationName} has a Veracode application profile`);
   // core.debug(profile);
   if (!profile.exists) {
     if (createprofile.toLowerCase() !== 'true')
       return { 'appId': -1, 'appGuid': -1, 'oid': -1 };
     
-    const veracodePolicy = await getVeracodePolicyByName(vid, vkey, policyName,isDebug);
-    core.debug(`Veracode Policy: ${veracodePolicy}`)
-    const veracodeTeams = await getVeracodeTeamsByName(vid, vkey, teams,isDebug);
-    core.debug(`Veracode Teams: ${veracodeTeams}`);
+    const veracodePolicy = await getVeracodePolicyByName(vid, vkey, policyName);
+    if (debug)
+      core.debug(`Veracode Policy: ${veracodePolicy}`)
+    const veracodeTeams = await getVeracodeTeamsByName(vid, vkey, teams);
+    if (debug)
+      core.debug(`Veracode Teams: ${veracodeTeams}`);
     // create a new Veracode application
     const resource = {
       resourceUri: appConfig().applicationUri,
@@ -117,13 +116,16 @@ async function getVeracodeApplicationForPolicyScan(vid, vkey, applicationName, p
               guid: veracodePolicy.policyGuid
             }
           ], 
-          teams: veracodeTeams
+          teams: veracodeTeams,
+          git_repo_url: gitRepositoryUrl
         }
       }
     };
-    core.debug(`Create Veracode application profile: ${JSON.stringify(resource)}`);
-    const response = await createResource(vid, vkey, resource,isDebug);
-    core.debug(`Veracode application profile created: ${JSON.stringify(response)}`);
+    if (debug)
+      core.debug(`Create Veracode application profile: ${JSON.stringify(resource)}`);
+    const response = await createResource(vid, vkey, resource);
+    if (debug)
+      core.debug(`Veracode application profile created: ${JSON.stringify(response)}`);
     const appProfile = response.app_profile_url;
     return {
       'appId': response.id,
@@ -137,7 +139,6 @@ async function getVeracodeApplicationScanStatus(vid, vkey, veracodeApp, buildId,
   let resource;
   if (sandboxID > 1){
     core.info('Checking the Sandbox Scan Status')
-    command = `java -jar ${jarName} -vid ${vid} -vkey ${vkey} -action GetBuildInfo -appid ${veracodeApp.appId} -sandboxid ${sandboxID} -buildid ${buildId}`
     const output = await runCommand(
       'java',
       [
@@ -192,7 +193,7 @@ async function getVeracodeApplicationScanStatus(vid, vkey, veracodeApp, buildId,
   }
 }
 
-async function getVeracodeApplicationFindings(vid, vkey, veracodeApp, buildId, sandboxID, sandboxGUID,isDebug) {
+async function getVeracodeApplicationFindings(vid, vkey, veracodeApp, buildId, sandboxID, sandboxGUID, platformType, isDebug) {
   console.log("Starting to fetch results");
   console.log("APP GUID: "+veracodeApp.appGuid)
   console.log("API URL: "+appConfig().findingsUri)
@@ -275,8 +276,17 @@ async function getVeracodeApplicationFindings(vid, vkey, veracodeApp, buildId, s
   delete process.env.https_proxy
   delete process.env.no_proxy
 
-  const { DefaultArtifactClient } = require('@actions/artifact')
-  const artifactClient = new DefaultArtifactClient();
+  const { DefaultArtifactClient } = require('@actions/artifact');
+  const artifactV1 = require('@actions/artifact-v1');
+  let artifactClient;
+
+  if (platformType === 'ENTERPRISE') {
+    artifactClient = artifactV1.create();
+    core.info(`Initialized the artifact object using version V1.`);
+  } else {
+    artifactClient = new DefaultArtifactClient();
+    core.info(`Initialized the artifact object using version V2.`);
+  }
 
   const artifactName = 'policy-flaws';
   const files = [

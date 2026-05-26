@@ -6,6 +6,7 @@ const { createSandboxBuild, createBuild, uploadFile, beginPreScan, checkPrescanS
 } = require('./services/scan-service.js');
 const appConfig = require('./app-cofig.js');
 const { setGlobalProxy } = require('./api/http-requests.js');
+const { executeStaticScans } = require('./services/workflow-service.js');
 
 const vid = core.getInput('vid', { required: true });
 const vkey = core.getInput('vkey', { required: true });
@@ -21,7 +22,10 @@ const deleteincompletescan = core.getInput('deleteincompletescan', { required: f
 const failbuild = core.getInput('failbuild', { required: false });
 const createsandbox = core.getInput('createsandbox', { required: false });
 const sandboxname = core.getInput('sandboxname', { required: false });
-const debug = core.getInput('debug', { required: false });
+const gitRepositoryUrl = core.getInput('gitRepositoryUrl', { required: false });
+const platformType = core.getInput('platformType', { required: false });
+const workflowApp = core.getInput('workflowApp', {required: false});
+const debug = core.getInput('debug', {required: false});
 
 const POLICY_EVALUATION_FAILED = 9;
 const SCAN_TIME_OUT = 8;
@@ -70,8 +74,14 @@ async function run() {
   // Setting up a global proxy for the API calls
   setGlobalProxy(isDebug);
 
-  core.debug(`Getting Veracode Application for Policy Scan: ${appname}`)
-  const veracodeApp = await getVeracodeApplicationForPolicyScan(vid, vkey, appname, policy, teams, createprofile,isDebug);
+  if (workflowApp){
+      await executeStaticScans(vid, vkey, appname, policy, teams, createprofile, gitRepositoryUrl, sandboxname, version, filepath, responseCode, createsandbox, failbuild, debug);
+      return;
+  }  
+
+  if (debug)
+    core.debug(`Getting Veracode Application for Policy Scan: ${appname}`)
+  const veracodeApp = await getVeracodeApplicationForPolicyScan(vid, vkey, appname, policy, teams, createprofile, gitRepositoryUrl, debug);
   if (veracodeApp.appId === -1) {
     core.setFailed(`Veracode application profile Not Found. Please create a profile on Veracode Platform, \
       or set "createprofile" to "true" in the pipeline configuration to automatically create profile.`);
@@ -89,7 +99,7 @@ async function run() {
   try {
     if (sandboxname !== ''){
       core.info(`Running a Sandbox Scan: '${sandboxname}' on applicaiton: '${appname}'`);
-      const sandboxes = await getVeracodeSandboxIDFromProfile(vid, vkey, veracodeApp.appGuid,isDebug);
+      const sandboxes = await getVeracodeSandboxIDFromProfile(vid, vkey, veracodeApp.appGuid, debug);
 
       core.info('Finding Sandbox ID & GUID');
       if (sandboxes.page.total_elements !== 0) {
@@ -104,13 +114,14 @@ async function run() {
         }
       }
       if ( sandboxID == undefined && createsandbox == 'true'){
-        core.debug(`Sandbox Not Found. Creating Sandbox: ${sandboxname}`);
+        if (debug)
+          core.debug(`Sandbox Not Found. Creating Sandbox: ${sandboxname}`);
         //create sandbox
-        const createSandboxResponse = await createSandboxRequest(vid, vkey, veracodeApp.appGuid, sandboxname,isDebug);
+        const createSandboxResponse = await createSandboxRequest(vid, vkey, veracodeApp.appGuid, sandboxname, debug);
         core.info(`Veracode Sandbox Created: ${createSandboxResponse.name} / ${createSandboxResponse.guid}`);
         sandboxID = createSandboxResponse.id;
         sandboxGUID = createSandboxResponse.guid;
-        buildId = await createSandboxBuild(vid, vkey, jarName, veracodeApp.appId, version, deleteincompletescan, sandboxID);
+        buildId = await createSandboxBuild(vid, vkey, jarName, veracodeApp.appId, version, deleteincompletescan, sandboxID, debug);
         core.info(`Veracode Sandbox Scan Created, Build Id: ${buildId}`);
       }
       else if ( sandboxID == undefined && createsandbox == 'false'){
@@ -120,13 +131,13 @@ async function run() {
       }
       else{
         core.info(`Sandbox Found: ${sandboxID} - ${sandboxGUID}`);
-        buildId = await createSandboxBuild(vid, vkey, jarName, veracodeApp.appId, version, deleteincompletescan, sandboxID);
+        buildId = await createSandboxBuild(vid, vkey, jarName, veracodeApp.appId, version, deleteincompletescan, sandboxID, debug);
         core.info(`Veracode Sandbox Scan Created, Build Id: ${buildId}`);
       }
     }
     else{
       core.info(`Running a Policy Scan: ${appname}`);
-      buildId = await createBuild(vid, vkey, jarName, veracodeApp.appId, version, deleteincompletescan);  
+      buildId = await createBuild(vid, vkey, jarName, veracodeApp.appId, version, deleteincompletescan, debug);
       core.info(`Veracode Policy Scan Created, Build Id: ${buildId}`);
     }
   } catch (error) {
@@ -134,7 +145,7 @@ async function run() {
     return;
   }
 
-  const uploaded = await uploadFile(vid, vkey, jarName, veracodeApp.appId, filepath, sandboxID);
+  const uploaded = await uploadFile(vid, vkey, jarName, veracodeApp.appId, filepath, sandboxID, debug);
   core.info(`Artifact(s) uploaded: ${uploaded}`);
 
   // return and exit the app if the duration of the run is more than scantimeout
@@ -149,7 +160,7 @@ async function run() {
   
   if (include === '' && uploaded > 0) {
     const autoScan = true;
-    await beginPreScan(vid, vkey, jarName, veracodeApp.appId, autoScan, sandboxID);
+    await beginPreScan(vid, vkey, jarName, veracodeApp.appId, autoScan, sandboxID, debug);
     if (scantimeout === '') {
       core.info('Static Scan Submitted, please check Veracode Platform for results');
       return;
@@ -158,7 +169,7 @@ async function run() {
   else if (uploaded > 0)
   {
     const autoScan = false;
-    const prescan = await beginPreScan(vid, vkey, jarName, veracodeApp.appId, autoScan, sandboxID);
+    const prescan = await beginPreScan(vid, vkey, jarName, veracodeApp.appId, autoScan, sandboxID, debug);
     core.info(`Pre-Scan Submitted: ${prescan}`);
     while (true) {
       await sleep(appConfig().pollingInterval);
@@ -176,9 +187,9 @@ async function run() {
       }
     }
 
-    const moduleIds = await getModules(vid, vkey, jarName, veracodeApp.appId, include, sandboxID);
+    const moduleIds = await getModules(vid, vkey, jarName, veracodeApp.appId, include, sandboxID, debug);
     core.info(`Modules to Scan: ${moduleIds.toString()}`);
-    const scan = await beginScan(vid, vkey, jarName, veracodeApp.appId, moduleIds.toString(), sandboxID);
+    const scan = await beginScan(vid, vkey, jarName, veracodeApp.appId, moduleIds.toString(), sandboxID, debug);
     core.info(`Scan Submitted: ${scan}`);
   }
   else 
@@ -228,7 +239,8 @@ async function run() {
       return responseCode;
     }
   }
-  await getVeracodeApplicationFindings(vid, vkey, veracodeApp, buildId, sandboxID, sandboxGUID,isDebug);
+
+  await getVeracodeApplicationFindings(vid, vkey, veracodeApp, buildId, sandboxID, sandboxGUID, platformType, isDebug);
   return responseCode;
 }
 

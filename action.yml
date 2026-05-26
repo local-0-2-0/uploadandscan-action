@@ -51,11 +51,22 @@ inputs:
     description: 'Sandbox Name'
     required: false
     default: ''
-  debug:
-    description: 'Enable debug mode. 1 for on'
+  gitRepositoryUrl:
+    description: 'Source Repository URL'
     required: false
-
+    default: ''
+  platformType:
+    description: 'Specifies the platform environment type — use CLOUD for GitHub.com or ENTERPRISE for GitHub Enterprise Server (GHES).'
+    default: 'CLOUD'
+    required: false
+  workflowApp:
+    description: 'Specifies whether request is from workflow app'
+    required: false
+    default: 'false'
+  debug:
+    description: 'Enable or disable debug mode'
+    required: false
+    default: false
 runs:
   using: 'node20'
   main: 'dist/index.js'
-
