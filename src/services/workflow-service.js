@@ -14,7 +14,7 @@ const { calculateAuthorizationHeader } = require('../api/veracode-hmac.js');
 const SCAN_TIME_OUT = 8;
 const POLICY_EVALUATION_FAILED = 9;
 
-async function executeStaticScans(vid, vkey, appname, policy, teams, createprofile, gitRepositoryUrl, sandboxname, version, filepath, responseCode, createsandbox, failbuild, debug, scantimeout) {
+async function executeStaticScans(vid, vkey, appname, policy, teams, createprofile, gitRepositoryUrl, sandboxname, version, filepath, responseCode, createsandbox, failbuild, debug, scantimeout, waitForScanCompletion) {
   core.info(`Getting Veracode Application for Policy Scan: ${appname}`)
   const veracodeApp = await getVeracodeApplicationForPolicyScan(vid, vkey, appname, policy, teams, createprofile, gitRepositoryUrl, debug);
   if (veracodeApp.appId === -1) {
@@ -89,7 +89,7 @@ async function executeStaticScans(vid, vkey, appname, policy, teams, createprofi
       core.info(`Running a Policy Scan: ${appname}`);
       //comand for policy scan 
       core.info(`Veracode Policy Scan Created, Build Id: ${version}`);
-      await executePolicyScan(vid, vkey, veracodeApp, jarName, version, filepath, responseCode, failbuild, debug, scantimeout)
+      await executePolicyScan(vid, vkey, veracodeApp, jarName, version, filepath, responseCode, failbuild, debug, scantimeout, waitForScanCompletion)
     }
   } catch (error) {
     console.log(error)
@@ -99,7 +99,7 @@ async function executeStaticScans(vid, vkey, appname, policy, teams, createprofi
 
 }
 
-async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filepath, responseCode, failbuild, debug, scantimeout) {
+async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filepath, responseCode, failbuild, debug, scantimeout, waitForScanCompletion) {
   const debugFlag = debug ? ' -debug' : '';
   if (debug)
     core.debug(`Module: workflow-service, function: executePolicyScan. Application: ${veracodeApp.appId}`);
@@ -122,8 +122,8 @@ async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filep
     core.debug(stdout);
     core.debug(stderr);
   }
-  core.info('Checking for results.....');
-  if(scantimeout == 0){
+
+  if (waitForScanCompletion == false) {
     core.info('Static Scan Submitted, please check Veracode Platform for results');
     return;
   }
