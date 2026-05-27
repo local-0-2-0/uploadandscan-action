@@ -122,9 +122,8 @@ async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filep
     core.debug(stdout);
     core.debug(stderr);
   }
-  core.info(`waitForScanCompletion flag is set to: ${waitForScanCompletion}`);
-  core.info(waitForScanCompletion == false);
-  if (waitForScanCompletion == false) {
+
+  if (String(inputs.waitForScanCompletion).toLowerCase() === 'false') {
     core.info('Static Scan Submitted, please check Veracode Platform for results');
     return;
   }
