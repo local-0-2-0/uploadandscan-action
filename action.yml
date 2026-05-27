@@ -72,5 +72,5 @@ inputs:
     default: 'true'
     required: false   
 runs:
-  using: 'node24'
+  using: 'node20'
   main: 'dist/index.js'
