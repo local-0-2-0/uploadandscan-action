@@ -123,7 +123,7 @@ async function executePolicyScan(vid, vkey, veracodeApp, jarName, version, filep
     core.debug(stderr);
   }
 
-  if (String(inputs.waitForScanCompletion).toLowerCase() === 'false') {
+  if (String(waitForScanCompletion).toLowerCase() === 'false') {
     core.info('Static Scan Submitted, please check Veracode Platform for results');
     return;
   }
