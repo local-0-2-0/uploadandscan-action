@@ -1,5 +1,5 @@
 name: 'Veracode Policy Scan'
-description: 'Upload files to Veracode and start a static policy scan.'
+description: 'Upload files to Veracode and start a static policy scan .'
 inputs:
   vid:
     description: 'Veracode ID'
